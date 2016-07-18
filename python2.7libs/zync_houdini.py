@@ -470,7 +470,7 @@ def populate_machine_type(node):
 
   data = ZyncConnection().get_machine_types(renderer=renderer)
   instances = [
-      (v['order'],"%s ($%s)" %(v['description'], v['cost']), k)
+      (v['order'],"%s ($%s)" %(k, v['cost']), k)
       for k, v in data.iteritems()]
   instances = sorted(instances)
   return [k for i in instances for k in (i[2], i[1])]
