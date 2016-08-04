@@ -95,16 +95,18 @@ class ZyncConnection(object):
       """
       return self.zync_conn is not None and self.zync_conn.has_user_login()
 
-    def get_project_list(self):
+    def get_project_list(self, force_fetch=False):
       """Lists available projects.
 
+      Args:
+        force_fetch: bool, Force updating list via API call.
       Returns:
         [str], List of available projects.
       """
       if not self.zync_conn:
         return []
-      if not self.project_list:
-       self.project_list = self.zync_conn.get_project_list()
+      if force_fetch or (not self.project_list):
+        self.project_list = self.zync_conn.get_project_list()
       return self.project_list
 
     def get_machine_types(self, renderer):
@@ -165,6 +167,7 @@ class ZyncConnection(object):
         self.zync_conn.submit_job(
            'houdini', job_data.scene_path(), params=job_data.params_to_send())
         hou.ui.displayMessage(text='Job submitted to Zync.')
+        post_submit_job(node)
       except zync.ZyncPreflightError as e:
         hou.ui.displayMessage(title='Preflight Check Failed', text=str(e),
             severity=hou.severityType.Error)
@@ -433,6 +436,16 @@ class ZyncHoudiniJob(object):
     return params_to_send
 
 
+def post_submit_job(node):
+  """Function called after successful submission of job.
+
+  Args:
+    node: hou.Node, Zync node to be updated.
+  """
+  ZyncConnection().get_project_list(force_fetch=True)
+  node.parm('create_project').set(False)
+
+
 def update_estimated_cost(node):
   """Updates estimated cost of hour of computation using given amount of
      machines and given machine type.
@@ -655,6 +668,15 @@ def select_auxiliary_files_callback(node, **_):
   dialog.show()
 
 
+def update_projects_list_callback(**_):
+  """Fetches new list of existing projects.
+
+  Args:
+    **_: Ignored kwargs.
+  """
+  ZyncConnection().get_project_list(force_fetch=True)
+
+
 def num_instances_callback(node, **_):
   """Updates estimated cost of rendering.
 
@@ -677,7 +699,8 @@ callbacks = dict(
     zync_render=zync_render_callback,
     num_instances=num_instances_callback,
     source=source_callback,
-    select_auxiliary_files=select_auxiliary_files_callback
+    select_auxiliary_files=select_auxiliary_files_callback,
+    update_projects_list=update_projects_list_callback
 )
 
 
