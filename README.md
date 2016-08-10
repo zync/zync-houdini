@@ -6,7 +6,7 @@ To install plugin one has to take the following steps:
 
 1. Clone this repository into your machine.
 
-2. Find your `houdini.env` file. [How to find houdini.env.](http://www.sidefx.com/docs/houdini9.5/basics/config_env)
+2. Find your `houdini.env` file. [How to find houdini.env.](http://www.sidefx.com/docs/houdini/basics/config_env)
    Add the following section to this file.
 
     ```
