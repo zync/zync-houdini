@@ -1,5 +1,7 @@
 # zync-houdini
 
+## Installation
+
 To install plugin one has to take the following steps:
 
 1. Clone this repository into your machine.
@@ -8,9 +10,7 @@ To install plugin one has to take the following steps:
    Add the following section to this file.
 
     ```
-    # zync config start
     HOUDINI_PATH = "/path/to/zync-houdini/;&"
-    # zync config end
     ```
 
     Be careful about preserving `;&` at the end. If you are using Windows make
@@ -23,3 +23,10 @@ To install plugin one has to take the following steps:
     * Create `config_houdini.py` and put path to `zync-python` in `API_DIR` variable.
 
 4. Restart Houdini.
+
+## Verification of the installation
+
+In order to check if the plugin was installed properly launch Houdini and go to
+`/out` network. Verify that `Zync` tool appears under `Farm` section of the `Tool Menu`.
+
+![preview of zync tool location](/readme_img/zynctool.png "Zync tool in Tab menu")
