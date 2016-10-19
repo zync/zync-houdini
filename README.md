@@ -1,5 +1,9 @@
 # zync-houdini
 
+# Warning
+
+Note that the simplest and recommended way to install Zync plugins is through the Zync Plugin Installer (see [instructions](https://sites.google.com/site/zyncpublic/doc/install#plugins)). The steps described below are for advanced users and we recommend to proceed with them only if you need to modify the plugin code for your custom needs.
+
 ## Installation
 
 To install plugin one has to take the following steps:
@@ -14,7 +18,7 @@ To install plugin one has to take the following steps:
     ```
 
     Be careful about preserving `;&` at the end. If you are using Windows make
-    sure you are using forward slashes `/` instead of backslashes. Ex. 
+    sure you are using forward slashes `/` instead of backslashes. Ex.
     `Z:/plugins/zync-houdini` Remember to replace path with the proper path to
     zync-houdini directory.
 
