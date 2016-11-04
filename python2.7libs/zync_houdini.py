@@ -27,7 +27,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 
 class JobCreationError(Exception):
@@ -422,7 +422,7 @@ class ZyncHoudiniJob(object):
       xres=self.node.parm('resolutionx').evalAsInt(),
       yres=self.node.parm('resolutiony').evalAsInt(),
       priority=self.node.parm('job_priority').evalAsInt(),
-      render_node=get_render_node(self.node).name(),
+      render_node=get_render_node(self.node).path(),
       output_dir=self.node.parm('output_dir').evalAsString(),
       output_filename=output_filename,
       proj_name=project_name,
