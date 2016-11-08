@@ -27,7 +27,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.0.3'
+__version__ = '1.0.4'
 
 
 class JobCreationError(Exception):
@@ -608,6 +608,11 @@ def login_callback(node, **_):
     node: hou.Node, Sender of the callback.
     **_: Ignored args.
   """
+  if not zync.is_latest_version([('zync_houdini', __version__)]):
+    message = ("Your plugin is not up to date. Please update your plugin "
+               "and restart Houdini to log in.")
+    hou.ui.displayMessage(message)
+    return
   ZyncConnection().login()
   update_all_node_login(node.type())
 
