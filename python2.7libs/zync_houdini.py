@@ -27,7 +27,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.0.4'
+__version__ = '1.0.5'
 
 
 class JobCreationError(Exception):
@@ -37,6 +37,11 @@ class JobCreationError(Exception):
 
 class ParameterError(JobCreationError):
   """Exception to handle parameter validation error."""
+  pass
+
+
+class AbortedByUser(JobCreationError):
+  """Exception to handle user action of canceling the submission."""
   pass
 
 
@@ -168,6 +173,8 @@ class ZyncConnection(object):
            'houdini', job_data.scene_path(), params=job_data.params_to_send())
         hou.ui.displayMessage(text='Job submitted to Zync.')
         post_submit_job(node)
+      except AbortedByUser:
+        pass
       except zync.ZyncPreflightError as e:
         hou.ui.displayMessage(title='Preflight Check Failed', text=str(e),
             severity=hou.severityType.Error)
@@ -284,6 +291,16 @@ class ZyncHoudiniJob(object):
       raise ParameterError('Project name cannot be empty')
     if not params.get('instance_type', ''):
       raise ParameterError('Machine type cannot be empty')
+    _, scene_ext = os.path.splitext(ZyncHoudiniJob.scene_path())
+    if scene_ext in ['.hipnc', '.hiplc'] and params.get('use_standalone', True):
+      message = ('You are about to send job using exporting standalone rendering'
+                 'files. This operation is not supported for scenes created in '
+                 'Apprentice or Indie version of Houdini FX. Are you sure you '
+                 'want to proceed?')
+      if hou.ui.displayMessage(
+          message, buttons=("Send it anyway", "Cancel submission")) == 1:
+        raise AbortedByUser('Standalone not supported for non commercial users.')
+
 
   @staticmethod
   def fetch_data_from_mantra_node(input_node):
