@@ -27,7 +27,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.0.5'
+__version__ = '1.0.6'
 
 
 class JobCreationError(Exception):
@@ -292,14 +292,13 @@ class ZyncHoudiniJob(object):
     if not params.get('instance_type', ''):
       raise ParameterError('Machine type cannot be empty')
     _, scene_ext = os.path.splitext(ZyncHoudiniJob.scene_path())
-    if scene_ext in ['.hipnc', '.hiplc'] and params.get('use_standalone', True):
-      message = ('You are about to send job using exporting standalone rendering'
-                 'files. This operation is not supported for scenes created in '
-                 'Apprentice or Indie version of Houdini FX. Are you sure you '
-                 'want to proceed?')
-      if hou.ui.displayMessage(
-          message, buttons=("Send it anyway", "Cancel submission")) == 1:
-        raise AbortedByUser('Standalone not supported for non commercial users.')
+
+    # Standalone rendering is not available for not-commercial or
+    # limited-commercial users.
+    commercial_license = (
+        hou.licenseCategory() == hou.licenseCategoryType.Commercial)
+    if not commercial_license:
+      params['use_standalone'] = 0
 
 
   @staticmethod
