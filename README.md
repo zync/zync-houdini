@@ -14,7 +14,7 @@ To install plugin one has to take the following steps:
    Add the following section to this file.
 
     ```
-    HOUDINI_PATH = "/path/to/zync-houdini/;&"
+    HOUDINI_PATH = "$HOUDINI_PATH;/path/to/zync-houdini/;&"
     ```
 
     Be careful about preserving `;&` at the end. If you are using Windows make
