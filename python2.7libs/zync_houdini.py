@@ -24,10 +24,10 @@ if not API_DIR in sys.path:
 
 
 import zync
-import file_select_dialog
+import zync_lib.auxiliary_files.file_select_dialog as file_select_dialog
 
 
-__version__ = '1.0.6'
+__version__ = '1.0.7'
 
 
 class JobCreationError(Exception):
@@ -683,11 +683,11 @@ def select_auxiliary_files_callback(node, **_):
     **_: Ignored kwargs.
   """
   files = set()
-  dialog = file_select_dialog.FileSelectDialog(files, hou.ui.mainQtWindow())
+  node.dialog = file_select_dialog.FileSelectDialog(files, hou.ui.mainQtWindow())
   def callback(files_set):
     node.parm('auxiliary_files_list').set(json.dumps(list(files_set)))
-  dialog.set_accept_callback(callback)
-  dialog.show()
+  node.dialog.set_accept_callback(callback)
+  node.dialog.exec_()
 
 
 def update_projects_list_callback(**_):
