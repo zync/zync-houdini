@@ -24,10 +24,10 @@ if not API_DIR in sys.path:
 
 
 import zync
-import zync_lib.auxiliary_files.file_select_dialog as file_select_dialog
+import file_select_dialog
 
 
-__version__ = '1.0.7'
+__version__ = '1.0.8'
 
 
 class JobCreationError(Exception):
