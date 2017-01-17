@@ -27,7 +27,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.0.10'
+__version__ = '1.0.11'
 
 
 class JobCreationError(Exception):
@@ -317,7 +317,8 @@ class ZyncHoudiniJob(object):
 
     result = dict(
       output_filename=os.path.basename(output_picture),
-      renderer='mantra'
+      renderer='mantra',
+      renderer_version=hou.applicationVersion()
     )
 
     if input_node.parm('trange').evalAsString() == 'off':
@@ -346,9 +347,13 @@ class ZyncHoudiniJob(object):
     """
     output_picture = input_node.parm('ar_picture').unexpandedString()
 
+    import htoa
+    arnold_version = htoa.__version__
+
     result = dict(
       output_filename=os.path.basename(output_picture),
-      renderer='arnold'
+      renderer='arnold',
+      renderer_version=arnold_version
     )
 
     if input_node.parm('trange').evalAsString() == 'off':
@@ -422,7 +427,8 @@ class ZyncHoudiniJob(object):
     scene_info=dict(
       dependencies=list(dependencies),
       houdini_version='Houdini%d.%d' % (houdini_version[0], houdini_version[1]),
-      houdini_build_version='%d.%d.%d' % houdini_version
+      houdini_build_version='%d.%d.%d' % houdini_version,
+      renderer_version=source_data['renderer_version']
     )
 
     params_to_send = dict(
