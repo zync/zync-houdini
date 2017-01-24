@@ -443,6 +443,7 @@ class ZyncHoudiniJob(object):
       override_res=self.node.parm('override_resolution').evalAsInt(),
       xres=self.node.parm('resolutionx').evalAsInt(),
       yres=self.node.parm('resolutiony').evalAsInt(),
+      notify_complete=self.node.parm('notify_completion').evalAsInt(),
       use_standalone=self.node.parm('use_standalone').evalAsInt(),
       priority=self.node.parm('job_priority').evalAsInt(),
       render_node=get_render_node(self.node).path(),
