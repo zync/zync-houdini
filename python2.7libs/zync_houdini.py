@@ -400,12 +400,7 @@ class ZyncHoudiniJob(object):
       frame_end = source_data['frame_end']
       step = source_data['step']
 
-    if self.node.parm('create_project').evalAsInt():
-      project_name = self.node.parm('new_project_name').evalAsString()
-    else:
-      project_name = self.node.parm('project').evalAsString()
-      if not project_name:
-        raise ParameterError('Please select project again.')
+    project_name = get_project_name(self.node)
 
     if self.node.parm('override_filename').eval():
       output_filename = self.node.parm('output_filename').unexpandedString()
@@ -420,9 +415,10 @@ class ZyncHoudiniJob(object):
 
     dependencies = self.get_dependencies(frame_begin, frame_end, step)
     if self.node.parm('auxiliary_files').evalAsInt():
-      auxiliary_json = self.node.parm('auxiliary_files_list').unexpandedString()
-      if auxiliary_json:
-        dependencies |= set(json.loads(auxiliary_json))
+      extra_assets = file_select_dialog.FileSelectDialog.get_extra_assets(project_name)
+      if not extra_assets:
+        raise ParameterError('Please select auxiliary files.')
+      dependencies |= set(extra_assets)
 
     scene_info=dict(
       dependencies=list(dependencies),
@@ -621,6 +617,16 @@ def update_input_node(node):
   node.parm('render_type').set(get_type_of_input_node(get_render_node(node)))
 
 
+def get_project_name(node):
+  if node.parm('create_project').evalAsInt():
+    return node.parm('new_project_name').evalAsString()
+  else:
+    project_name = node.parm('project').evalAsString()
+    if not project_name:
+      raise ParameterError('Please select project again.')
+    return project_name
+
+
 # Parms callbacks
 
 
@@ -689,11 +695,8 @@ def select_auxiliary_files_callback(node, **_):
     node: hou.Node, Node used to submit job.
     **_: Ignored kwargs.
   """
-  files = set()
-  node.dialog = file_select_dialog.FileSelectDialog(files, hou.ui.mainQtWindow())
-  def callback(files_set):
-    node.parm('auxiliary_files_list').set(json.dumps(list(files_set)))
-  node.dialog.set_accept_callback(callback)
+  project_name = get_project_name(node)
+  node.dialog = file_select_dialog.FileSelectDialog(project_name, hou.ui.mainQtWindow())
   node.dialog.exec_()
 
 
@@ -787,3 +790,4 @@ def on_loaded_callback(node, **_):
     **_: Other parameters
   """
   update_node_login(node)
+
