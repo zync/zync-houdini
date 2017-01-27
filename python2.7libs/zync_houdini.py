@@ -27,7 +27,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.0.12'
+__version__ = '1.1'
 
 
 class JobCreationError(Exception):
