@@ -33,4 +33,4 @@ To install plugin one has to take the following steps:
 In order to check if the plugin was installed properly launch Houdini and go to
 `/out` network. Verify that `Zync` tool appears under `Farm` section of the `Tool Menu`.
 
-![preview of zync tool location](/readme_img/zynctool.png "Zync tool in Tab menu")
+![preview of zync tool location](readme_img/zynctool.png "Zync tool in Tab menu")
