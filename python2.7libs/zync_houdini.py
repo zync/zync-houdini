@@ -1,7 +1,7 @@
-import json
-
+import glob
 import hou
 import os
+import re
 import sys
 import webbrowser
 
@@ -27,7 +27,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.3'
+__version__ = '1.4'
 
 
 class JobCreationError(Exception):
@@ -248,17 +248,25 @@ class ZyncHoudiniJob(object):
     frames = xrange(int(frame_begin), int(frame_end) + 1, int(step))
 
     result = set()
+
+    wildcards = ['<udim>', '$SF']
+    wildcard_regex = [re.compile(re.escape(wc), re.IGNORECASE)
+                      for wc in wildcards]
+
     for frame in frames:
       for parm, _ in refs:
         if parm:
           file_path = parm.evalAtFrame(frame)
           if file_path in result:
             continue
-          try:
-            if hou.findFile(file_path):
-              result.add(file_path)
-          except hou.OperationFailed:
-            pass
+          for wildcard in wildcard_regex:
+            file_path = wildcard.sub('*', file_path)
+          for file in glob.glob(file_path):
+            try:
+              if hou.findFile(file) and file not in result:
+                result.add(file)
+            except hou.OperationFailed:
+              pass
     return result
 
   def params_to_send(self):
