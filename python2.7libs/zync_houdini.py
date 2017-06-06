@@ -27,7 +27,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.4'
+__version__ = '1.4.2'
 
 
 class JobCreationError(Exception):
@@ -81,6 +81,14 @@ class ZyncConnection(object):
       """
       if self.zync_conn:
         self.zync_conn.logout()
+
+    def get_site_name(self):
+      """Returns name of the Zync site.
+
+      Returns:
+        str
+      """
+      return zync.ZYNC_URL
 
     def get_user_email(self):
       """Returns user's email.
@@ -567,7 +575,8 @@ def update_node_login(node):
   """
   if ZyncConnection().is_logged_in():
     # Hide login button, make logout visible
-    node.parm('logged_name').set(ZyncConnection().get_user_email())
+    node.parm('logged_name1').set(ZyncConnection().get_user_email())
+    node.parm('logged_name2').set(ZyncConnection().get_site_name())
     node.parm('logged_in').set(1)
   else:
     node.parm('logged_in').set(0)
@@ -674,6 +683,15 @@ def cost_calculator_callback(**_):
   webbrowser.open('http://zync.cloudpricingcalculator.appspot.com/')
 
 
+def open_site_callback(**_):
+  """Opens browser with the Zync Web Console.
+
+  Args:
+    **_: Ignored params.
+  """
+  webbrowser.open(zync.ZYNC_URL)
+
+
 def zync_render_callback(node, **_):
   """Submits job to Zync.
 
@@ -735,6 +753,7 @@ def source_callback(node, **_):
 callbacks = dict(
     login=login_callback,
     logout=logout_callback,
+    open_site=open_site_callback,
     cost_calculator=cost_calculator_callback,
     zync_render=zync_render_callback,
     num_instances=num_instances_callback,
