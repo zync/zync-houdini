@@ -27,7 +27,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.4.2'
+__version__ = '1.4.3'
 
 
 class JobCreationError(Exception):
@@ -549,12 +549,13 @@ menu_callbacks = dict(
 )
 
 
-def populate_menu(node, parm):
+def populate_menu(node, parm, **_):
   """Fill menu callback hub. Determines proper callback on parm name.
 
   Args:
     node: hou.Node, Node containing parameter.
     parm: hou.Parm, Parameter to be populated.
+    **_: Ignored kwargs.
 
   Returns:
     [str], List representing menu entries.
