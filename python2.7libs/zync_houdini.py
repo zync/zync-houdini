@@ -27,7 +27,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.4.4'
+__version__ = '1.4.5'
 
 
 class JobCreationError(Exception):
@@ -750,6 +750,23 @@ def source_callback(node, **_):
   update_input_node(node)
 
 
+def open_help_callback(node, parm_name, **_):
+  """Opens browser with context help for a parm
+  
+  Args:
+    node: hou.Node, A parent node..
+    parm_name: str, Name of the parm
+    **_: Other parameters
+  """
+  base_url = 'https://sites.google.com/site/zyncpublic/'
+  context_help = dict(
+    standalone_help='doc/faq#TOC-Q.-What-is-the-render-workflow-when-'
+                    'submitting-a-render-job-from-Houdini-',
+    upload_only_help='doc/faq#TOC-Q.-What-does-Upload-only-job-mean-',
+  )
+  webbrowser.open(base_url + context_help.get(parm_name, ''))
+
+
 # Parameter callbacks registry.
 callbacks = dict(
     login=login_callback,
@@ -760,7 +777,9 @@ callbacks = dict(
     num_instances=num_instances_callback,
     source=source_callback,
     select_auxiliary_files=select_auxiliary_files_callback,
-    update_projects_list=update_projects_list_callback
+    update_projects_list=update_projects_list_callback,
+    standalone_help=open_help_callback,
+    upload_only_help=open_help_callback
 )
 
 
