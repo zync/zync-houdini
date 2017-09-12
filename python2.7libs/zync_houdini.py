@@ -27,7 +27,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.4.5'
+__version__ = '1.4.6'
 
 
 class JobCreationError(Exception):
@@ -446,6 +446,7 @@ class ZyncHoudiniJob(object):
     params_to_send = dict(
       plugin_version=__version__,
       upload_only=self.node.parm('upload_only').evalAsInt(),
+      skip_download=self.node.parm('skip_download').evalAsInt(),
       chunk_size=self.node.parm('chunk_size').evalAsInt(),
       instance_type=machine_type,
       num_instances=self.node.parm('num_instances').evalAsInt(),
@@ -763,6 +764,7 @@ def open_help_callback(node, parm_name, **_):
     standalone_help='doc/faq#TOC-Q.-What-is-the-render-workflow-when-'
                     'submitting-a-render-job-from-Houdini-',
     upload_only_help='doc/faq#TOC-Q.-What-does-Upload-only-job-mean-',
+    skip_download_help='doc/faq#TOC-Q.-Can-I-not-download-big-output',
   )
   webbrowser.open(base_url + context_help.get(parm_name, ''))
 
@@ -779,7 +781,8 @@ callbacks = dict(
     select_auxiliary_files=select_auxiliary_files_callback,
     update_projects_list=update_projects_list_callback,
     standalone_help=open_help_callback,
-    upload_only_help=open_help_callback
+    upload_only_help=open_help_callback,
+    skip_download_help=open_help_callback
 )
 
 
