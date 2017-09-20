@@ -27,7 +27,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.4.6'
+__version__ = '1.4.7'
 
 
 class JobCreationError(Exception):
@@ -216,7 +216,8 @@ class ZyncConnection(object):
           'like you haven\'t accepted this yet.\n\nA browser window will open '
           'so you can do this, then you\'ll be able to submit your job.\n\n'
           'URL: ' + eula_url)
-      if hou.ui.displayMessage(message, buttons=("OK", "Cancel")) == 0:
+      if hou.ui.displayMessage(message, buttons=("OK", "Cancel"),
+                               close_choice=1) == 0:
         webbrowser.open(eula_url)
 
       return False
@@ -705,7 +706,7 @@ def zync_render_callback(node, **_):
     if hou.hipFile.hasUnsavedChanges():
       save_file_response = hou.ui.displayMessage(
           "There are some unsaved changes. Do you want to save the file before "
-          "submitting to Zync?", buttons=("Yes", "No", "Cancel"))
+          "submitting to Zync?", buttons=("Yes", "No", "Cancel"), close_choice=2)
       if save_file_response == 2:
         return
       if save_file_response == 0:
