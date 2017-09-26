@@ -27,7 +27,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.4.7'
+__version__ = '1.4.9'
 
 
 class JobCreationError(Exception):
@@ -385,6 +385,36 @@ class ZyncHoudiniJob(object):
 
     return result
 
+  @staticmethod
+  def fetch_data_from_simulation_node(input_node):
+    """Collects data from simulation input node.
+
+    Assumes that input node is a simulation node
+
+    Args:
+      input_node: hou.Node, a simulation node.
+
+    Returns:
+      {str, object}, Submission parameters.
+    """
+    output_parm_names = dict(
+      output='dopoutput',
+      filecache='file')
+    parm_name = output_parm_names.get(input_node.type().name())
+    output_dir = input_node.parm(parm_name).unexpandedString()
+
+    result = dict(
+      output_filename=os.path.basename(output_dir),
+      renderer='simulation',
+      renderer_version=hou.applicationVersion()
+    )
+
+    result['frame_begin'] = input_node.parm('f1').eval()
+    result['frame_end'] = input_node.parm('f2').eval()
+    result['step'] = input_node.parm('f3').eval()
+
+    return result
+
   def fetch_data_from_source(self):
     """Identifies the input node type and collects data.
 
@@ -397,6 +427,8 @@ class ZyncHoudiniJob(object):
       return self.fetch_data_from_mantra_node(input_node)
     elif node_type == 'Arnold':
       return self.fetch_data_from_arnold_node(input_node)
+    elif node_type == 'Simulation':
+      return self.fetch_data_from_simulation_node(input_node)
     else:
       raise ParameterError('Input node has to be Mantra or Arnold node.')
 
@@ -591,8 +623,17 @@ def update_all_node_login(node_type):
   Args:
     node_type: hou.NodeType, Type of the nodes to be updated
   """
-  for node in node_type.instances():
-    update_node_login(node)
+  zync_node_types = dict(
+    zync_render='Driver',
+    zync_sim='Dop',
+    zync_sim_sop='Sop'
+  )
+
+  for zync_node_name in zync_node_types.keys():
+    category_name = zync_node_types[zync_node_name]
+    category = hou.nodeTypeCategories()[category_name]
+    for node in hou.nodeType(category, zync_node_name).instances():
+        update_node_login(node)
 
 
 def get_render_node(node):
@@ -629,6 +670,8 @@ def get_type_of_input_node(input_node):
       return 'Mantra'
     elif input_node_type == 'arnold':
       return 'Arnold'
+    elif input_node_type in ['output', 'filecache']:
+      return 'Simulation'
 
   return 'Unknown'
 
@@ -657,11 +700,12 @@ def login_callback(node, **_):
     node: hou.Node, Sender of the callback.
     **_: Ignored args.
   """
-  if not zync.is_latest_version([('zync_houdini', __version__)]):
-    message = ("Your plugin is not up to date. Please update your plugin "
-               "and restart Houdini to log in.")
-    hou.ui.displayMessage(message)
-    return
+  # TODO(cipriano) Re-enable this once version check bug is resolved.
+  #if not zync.is_latest_version([('zync_houdini', __version__)]):
+  #  message = ("Your plugin is not up to date. Please update your plugin "
+  #             "and restart Houdini to log in.")
+  #  hou.ui.displayMessage(message)
+  #  return
   ZyncConnection().login()
   update_all_node_login(node.type())
 
