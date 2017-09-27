@@ -27,7 +27,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.4.9'
+__version__ = '1.4.10'
 
 
 class JobCreationError(Exception):
@@ -632,7 +632,9 @@ def update_all_node_login(node_type):
   for zync_node_name in zync_node_types.keys():
     category_name = zync_node_types[zync_node_name]
     category = hou.nodeTypeCategories()[category_name]
-    for node in hou.nodeType(category, zync_node_name).instances():
+    node_type = hou.nodeType(category, zync_node_name)
+    if node_type:
+      for node in node_type.instances():
         update_node_login(node)
 
 
