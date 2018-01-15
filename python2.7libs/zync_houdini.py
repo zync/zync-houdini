@@ -27,7 +27,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.4.12'
+__version__ = '1.4.13'
 
 
 class JobCreationError(Exception):
@@ -476,6 +476,11 @@ class ZyncHoudiniJob(object):
       renderer_version=source_data['renderer_version']
     )
 
+    if hou.getenv('HOUDINI_OTLSCAN_PATH'):
+      scene_info['otlscan_path'] = hou.getenv('HOUDINI_OTLSCAN_PATH')
+    if hou.getenv('HOUDINI_OTL_PATH'):
+      scene_info['otl_path'] = hou.getenv('HOUDINI_OTL_PATH')
+
     params_to_send = dict(
       plugin_version=__version__,
       upload_only=self.node.parm('upload_only').evalAsInt(),
@@ -800,7 +805,7 @@ def source_callback(node, **_):
 
 def open_help_callback(node, parm_name, **_):
   """Opens browser with context help for a parm
-  
+
   Args:
     node: hou.Node, A parent node..
     parm_name: str, Name of the parm
