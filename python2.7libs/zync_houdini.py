@@ -27,7 +27,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.4.13'
+__version__ = '1.4.15'
 
 
 class JobCreationError(Exception):
@@ -198,29 +198,24 @@ class ZyncConnection(object):
       Returns:
         bool, User has accepted EULA?
       """
-      eula_required = False
-      for eula in self.zync_conn.get_eulas():
-        if eula['eula_kind'] == 'houdini-beta':
-          if eula['accepted_on']:
-            return True
-          else:
-            eula_required = True
+      applicable_eula_types = ['zync', 'cloud', 'licensor', 'houdini-beta']
+      to_accept = [eula for eula in self.zync_conn.get_eulas()
+                   if eula.get('eula_kind').lower() in applicable_eula_types]
+      # Blank accepted_by field indicates agreement is not yet accepted.
+      not_accepted = [eula for eula in to_accept if not eula.get('accepted_by')]
+      if not_accepted:
+        eula_url = '%s/account#legal' % self.zync_conn.url
+        message = (
+            'In order to launch Houdini jobs you must accept the EULA. It looks '
+            'like you haven\'t accepted this yet.\n\nA browser window will open '
+            'so you can do this, then you\'ll be able to submit your job.\n\n'
+            'URL: ' + eula_url)
+        if hou.ui.displayMessage(message, buttons=("OK", "Cancel"),
+                                 close_choice=1) == 0:
+          webbrowser.open(eula_url)
+        return False
 
-      if not eula_required:
-        return True
-
-      eula_url = '%s/account#legal' % self.zync_conn.url
-      # let the user know what's about to happen
-      message = (
-          'In order to launch Houdini jobs you must accept the EULA. It looks '
-          'like you haven\'t accepted this yet.\n\nA browser window will open '
-          'so you can do this, then you\'ll be able to submit your job.\n\n'
-          'URL: ' + eula_url)
-      if hou.ui.displayMessage(message, buttons=("OK", "Cancel"),
-                               close_choice=1) == 0:
-        webbrowser.open(eula_url)
-
-      return False
+      return True
 
 
 class ZyncHoudiniJob(object):
@@ -335,7 +330,8 @@ class ZyncHoudiniJob(object):
     result = dict(
       output_filename=os.path.basename(output_picture),
       renderer='mantra',
-      renderer_version=hou.applicationVersion()
+      renderer_version=hou.applicationVersion(),
+      render_current_frame=False
     )
 
     if input_node.parm('trange').evalAsString() == 'off':
@@ -343,6 +339,9 @@ class ZyncHoudiniJob(object):
       result['frame_begin'] = current_frame
       result['frame_end'] = current_frame
       result['step'] = 1
+      # Resolution limits only apply to non- and limited-commercial, so "Render Current Frame"
+      # isn't needed otherwise.
+      result['render_current_frame'] = (hou.licenseCategory() != hou.licenseCategoryType.Commercial)
     else:
       result['frame_begin'] = input_node.parm('f1').eval()
       result['frame_end'] = input_node.parm('f2').eval()
@@ -370,7 +369,8 @@ class ZyncHoudiniJob(object):
     result = dict(
       output_filename=os.path.basename(output_picture),
       renderer='arnold',
-      renderer_version=arnold_version
+      renderer_version=arnold_version,
+      render_current_frame=False
     )
 
     if input_node.parm('trange').evalAsString() == 'off':
@@ -378,6 +378,9 @@ class ZyncHoudiniJob(object):
       result['frame_begin'] = current_frame
       result['frame_end'] = current_frame
       result['step'] = 1
+      # Resolution limits only apply to non- and limited-commercial, so "Render Current Frame"
+      # isn't needed otherwise.
+      result['render_current_frame'] = (hou.licenseCategory() != hou.licenseCategoryType.Commercial)
     else:
       result['frame_begin'] = input_node.parm('f1').eval()
       result['frame_end'] = input_node.parm('f2').eval()
@@ -406,7 +409,8 @@ class ZyncHoudiniJob(object):
     result = dict(
       output_filename=os.path.basename(output_dir),
       renderer='simulation',
-      renderer_version=hou.applicationVersion()
+      renderer_version=hou.applicationVersion(),
+      render_current_frame=False
     )
 
     result['frame_begin'] = input_node.parm('f1').eval()
@@ -473,7 +477,8 @@ class ZyncHoudiniJob(object):
       dependencies=list(dependencies),
       houdini_version='Houdini%d.%d' % (houdini_version[0], houdini_version[1]),
       houdini_build_version='%d.%d.%d' % houdini_version,
-      renderer_version=source_data['renderer_version']
+      renderer_version=source_data['renderer_version'],
+      render_current_frame=source_data['render_current_frame']
     )
 
     if hou.getenv('HOUDINI_OTLSCAN_PATH'):
