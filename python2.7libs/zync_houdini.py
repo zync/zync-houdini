@@ -5,7 +5,6 @@ import re
 import sys
 import webbrowser
 
-
 if os.environ.get('ZYNC_API_DIR'):
   API_DIR = os.environ.get('ZYNC_API_DIR')
 else:
@@ -27,7 +26,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.4.15'
+__version__ = '1.5.1'
 
 
 class JobCreationError(Exception):
@@ -176,9 +175,12 @@ class ZyncConnection(object):
       if not self.check_eulas():
         return
 
+      params = job_data.params_to_send()
+      if not self.maybe_show_pvm_warning(params):
+        return
+
       try:
-        self.zync_conn.submit_job(
-           'houdini', job_data.scene_path(), params=job_data.params_to_send())
+        self.zync_conn.submit_job('houdini', job_data.scene_path(), params=params)
         hou.ui.displayMessage(text='Job submitted to Zync.')
         post_submit_job(node)
       except AbortedByUser:
@@ -216,6 +218,23 @@ class ZyncConnection(object):
         return False
 
       return True
+
+
+    def maybe_show_pvm_warning(self, params):
+      version_major, _, _ = hou.applicationVersionString().split('.')
+      if int(version_major) < 16:
+        # Prior to V 16 Houdini didn't have PySide
+        return True
+
+      if not 'PREEMPTIBLE' in params['instance_type']:
+        True
+
+      import pvm_consent_dialog
+      from settings import Settings
+
+      consent_dialog = pvm_consent_dialog.PvmConsentDialog()
+
+      return Settings.get().get_pvm_ack() or consent_dialog.prompt()
 
 
 class ZyncHoudiniJob(object):
@@ -816,12 +835,11 @@ def open_help_callback(node, parm_name, **_):
     parm_name: str, Name of the parm
     **_: Other parameters
   """
-  base_url = 'https://sites.google.com/site/zyncpublic/'
+  base_url = 'https://docs.zyncrender.com/'
   context_help = dict(
-    standalone_help='doc/faq#TOC-Q.-What-is-the-render-workflow-when-'
-                    'submitting-a-render-job-from-Houdini-',
-    upload_only_help='doc/faq#TOC-Q.-What-does-Upload-only-job-mean-',
-    skip_download_help='doc/faq#TOC-Q.-Can-I-not-download-big-output',
+    standalone_help='faq#q-what-is-the-render-workflow-when-submitting-a-render-job-from-houdini',
+    upload_only_help='faq#q-what-does-upload-only-job-mean',
+    skip_download_help='faq#q-can-i-skip-downloading-large-outputs',
   )
   webbrowser.open(base_url + context_help.get(parm_name, ''))
 
