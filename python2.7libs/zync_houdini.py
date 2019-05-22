@@ -26,7 +26,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.5.1'
+__version__ = '1.5.2'
 
 
 class JobCreationError(Exception):
@@ -106,6 +106,16 @@ class ZyncConnection(object):
         bool
       """
       return self.zync_conn is not None and self.zync_conn.has_user_login()
+
+    def is_v2(self):
+      """Tells if the backend is v2.
+
+      Returns:
+        bool
+      """
+      if self.zync_conn:
+        return 'ZYNC_BACKEND_VERSION' in self.zync_conn.CONFIG and self.zync_conn.CONFIG['ZYNC_BACKEND_VERSION'] == 2
+      return False
 
     def get_project_list(self, force_fetch=False):
       """Lists available projects.
@@ -739,6 +749,16 @@ def login_callback(node, **_):
   #  return
   ZyncConnection().login()
   update_all_node_login(node.type())
+  _disable_standalone(node, ZyncConnection().is_v2())
+
+
+def _disable_standalone(node, disable):
+  use_standalone = node.parm('use_standalone')
+  if disable:
+    if use_standalone.isLocked:
+      use_standalone.lock(False)
+    use_standalone.set(False)
+  use_standalone.lock(disable)
 
 
 def logout_callback(node, **_):
@@ -915,4 +935,3 @@ def on_loaded_callback(node, **_):
     **_: Other parameters
   """
   update_node_login(node)
-
