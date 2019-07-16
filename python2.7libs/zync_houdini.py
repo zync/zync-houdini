@@ -26,7 +26,7 @@ import zync
 import file_select_dialog
 
 
-__version__ = '1.5.2'
+__version__ = '1.5.3'
 
 
 class JobCreationError(Exception):
@@ -145,7 +145,7 @@ class ZyncConnection(object):
 
       if renderer not in self.instance_types:
         self.instance_types[renderer] = self.zync_conn.get_instance_types(
-            renderer=renderer)
+            renderer=renderer, usage_tag='houdini_%s' % renderer)
 
       return self.instance_types[renderer]
 
@@ -237,7 +237,7 @@ class ZyncConnection(object):
         return True
 
       if not 'PREEMPTIBLE' in params['instance_type']:
-        True
+        return True
 
       import pvm_consent_dialog
       from settings import Settings
@@ -418,6 +418,44 @@ class ZyncHoudiniJob(object):
     return result
 
   @staticmethod
+  def fetch_data_from_redshift_node(input_node):
+    """Collects data form Redshift input node.
+
+    Assumes that input node is Redshift node
+
+    Args:
+      input_node: hou.Node, Redshift node.
+
+    Returns:
+      {str, object}, Submission parameters.
+    """
+    output_picture = input_node.parm('RS_outputFileNamePrefix').unexpandedString()
+
+    redshift_version = hou.hscript("Redshift_version")[0].strip()
+
+    result = dict(
+      output_filename=os.path.basename(output_picture),
+      renderer='redshift',
+      renderer_version=redshift_version,
+      render_current_frame=False
+    )
+
+    if input_node.parm('trange').evalAsString() == 'off':
+      current_frame = hou.frame()
+      result['frame_begin'] = current_frame
+      result['frame_end'] = current_frame
+      result['step'] = 1
+      # Resolution limits only apply to non- and limited-commercial, so "Render Current Frame"
+      # isn't needed otherwise.
+      result['render_current_frame'] = (hou.licenseCategory() != hou.licenseCategoryType.Commercial)
+    else:
+      result['frame_begin'] = input_node.parm('f1').eval()
+      result['frame_end'] = input_node.parm('f2').eval()
+      result['step'] = input_node.parm('f3').eval()
+
+    return result
+
+  @staticmethod
   def fetch_data_from_simulation_node(input_node):
     """Collects data from simulation input node.
 
@@ -460,10 +498,12 @@ class ZyncHoudiniJob(object):
       return self.fetch_data_from_mantra_node(input_node)
     elif node_type == 'Arnold':
       return self.fetch_data_from_arnold_node(input_node)
+    elif node_type == 'Redshift':
+      return self.fetch_data_from_redshift_node(input_node)
     elif node_type == 'Simulation':
       return self.fetch_data_from_simulation_node(input_node)
     else:
-      raise ParameterError('Input node has to be Mantra or Arnold node.')
+      raise ParameterError('Input node has to be Mantra, Arnold or Redshift node.')
 
   def get_raw_params(self):
     """Collects submission parameters.
@@ -711,6 +751,8 @@ def get_type_of_input_node(input_node):
       return 'Mantra'
     elif input_node_type == 'arnold':
       return 'Arnold'
+    elif input_node_type == 'Redshift_ROP':
+      return 'Redshift'
     elif input_node_type in ['output', 'filecache']:
       return 'Simulation'
 
